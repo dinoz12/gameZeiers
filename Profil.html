@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ChicCloset - Location de vêtements de luxe</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #7C3AED;  /* Violet ChicCloset */
+            --primary-dark: #5B21B6;
+            --secondary: #F59E0B; /* Or */
+            --accent: #10B981;   /* Vert */
+            --text-light: #f3f4f6;
+            --text-dark: #1f2937;
+            --bg-light: #f8f9fa;
+            --bg-dark: #0f0f0f;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --error: #EF4444;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            line-height: 1.5;
+            padding-bottom: 80px;
+        }
+
+        .app-container {
+            max-width: 428px;
+            min-height: 100vh;
+            margin: 0 auto;
+            background-color: white;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .status-bar {
+            background: var(--bg-dark);
+            height: 24px;
+            color: white;
+            font-size: 12px;
+            padding: 2px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .screen {
+            min-height: calc(100vh - 104px);
+            opacity: 0;
+            display: none;
+            transition: opacity 0.3s ease;
+            padding-bottom: 80px;
+        }
+
+        .screen.active {
+            opacity: 1;
+            display: block;
+        }
+
+        .app-header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 12px 16px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 24px;
+            z-index: 100;
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 428px;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+            border-top: 1px solid #eaeaea;
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 10px;
+            color: #9ca3af;
+            transition: all 0.2s;
+            padding: 0 10px;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+            transform: scale(1.1);
+        }
+
+        .nav-item i {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+
+        .clothing-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 12px;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+            background: white;
+        }
+
+        .clothing-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.2);
+            border-color: var(--primary);
+        }
+
+        .rating-stars {
+            color: #FBBF24;
+        }
+
+        .brand-badge {
+            background-color: #EDE9FE;
+            color: var(--primary-dark);
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 12px;
+            display: inline-block;
+            margin-right: 4px;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-block;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(124, 58, 237, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .search-bar {
+            background-color: white;
+            border-radius: 24px;
+            padding: 8px 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e5e7eb;
+        }
+
+        .filter-chip {
+            background-color: #EDE9FE;
+            color: var(--primary-dark);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-right: 8px;
+            margin-bottom: 8px;
+            display: inline-flex;
+            align-items: center;
+            font-weight: 500;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .filter-chip.active {
+            background-color: var(--primary);
+            color: white;
+            border-color: white;
+        }
+
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 15, 15, 0.95);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .loading-screen.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .loader {
+            width: 60px;
+            height: 60px;
+            border: 5px solid rgba(255, 255, 255, 0.1);
+            border-top: 5px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .price-tag {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-weight: 600;
+            color: var(--primary-dark);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .feature-badge {
+            display: inline-flex;
+            align-items: center;
+            background-color: #EDE9FE;
+            color: var(--text-dark);
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-right: 6px;
+            margin-bottom: 6px;
+        }
+
+        .feature-badge i {
+            margin-right: 4px;
+            color: var(--primary);
+        }
+
+        .review-card {
+            background-color: white;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .booking-calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .calendar-day {
+            text-align: center;
+            padding: 8px;
+            border-radius: 8px;
+            background-color: #f3f4f6;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .calendar-day.active {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .calendar-day.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .time-slot {
+            display: inline-block;
+            padding: 8px 12px;
+            margin: 4px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .time-slot.active {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .feature-toggle {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .feature-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: var(--primary);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+
+        .chat-bubble {
+            max-width: 70%;
+            padding: 10px 14px;
+            border-radius: 18px;
+            margin-bottom: 8px;
+            position: relative;
+        }
+
+        .chat-bubble.user {
+            background-color: var(--primary);
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+
+        .chat-bubble.host {
+            background-color: #f3f4f6;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+
+        .chat-time {
+            font-size: 11px;
+            color: #9ca3af;
+            margin-top: 4px;
+            text-align: right;
+        }
+
+        .verified-badge {
+            background-color: #D1FAE5;
+            color: #065F46;
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .security-badge {
+            background-color: #DBEAFE;
+            color: #1E40AF;
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        /* Badges spécifiques aux marques */
+        .chanel-badge {
+            background-color: #FEE2E2;
+            color: #991B1B;
+        }
+
+        .dior-badge {
+            background-color: #EFF6FF;
+            color: #1E40AF;
+        }
+
+        .gucci-badge {
+            background-color: #ECFDF5;
+            color: #047857;
+        }
+
+        .armani-badge {
+            background-color: #EDE9FE;
+            color: #5B21B6;
+        }
+
+        .clothing-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-right: 16px;
+        }
+        
+        .clothing-image {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            border-radius: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .category-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+
+        .size-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+        }
+
+        .size-item:last-child {
+            border-bottom: none;
+        }
+
+        .size-available {
+            color: #10B981;
+            font-weight: 600;
+        }
+
+        .size-unavailable {
+            color: #EF4444;
+        }
+
+        .clothing-type-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+
+        .occasion-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+
+            <h2 class="text-lg font-bold mb-3">tg game</h2>
+            
+            <!-- Article 1 -->
+            <div class="clothing-card">
+                <div class="price-tag">00-</div>
+                <img src="https://images.unsplash.com/photo-1539109136881-3be0616acf4b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=687&q=80" alt="Robe Chanel" class="clothing-image">
+                <div class="flex items-start mb-3">
+                    <div class="relative mr-3">
+                        <div class="clothing-icon bg-purple-100 text-purple-600">
+                            <i class="fas fa-tshirt">1</i>
+                        </div>
+                        <div class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center text-white text-xs">
+                            <i class="fas fa-check"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="font-bold">Admin V3</h3>
+                        <div class="flex items-center mb-1">
+                    
+                            <span class="security-badge mr-2">
+                                <i class="fas fa-award mr-1"></i>
+                            </span>
+                            <span class="text-sm text-green-600">
+                                <i class="fas fa-check-circle mr-1"></i> verified
+                            </span>
+                        </div>
+                        <div class="mt-2">
+                            <span class="chanel-badge brand-badge">Good</span>
+                            <span class="occasion-badge bg-pink-100 text-pink-800">Good 2</span>
+ <span class="occasion-badge bg-pink-100 text-pink-800">Veteran 1 seazon</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex justify-between items-center">
+                    <div>
+                        <span class="feature-badge"><i class="fas fa-ruler"></i> Record 45000</span>
+                        <span class="feature-badge"><i class="fas fa-palette"></i>Не уязвимый</span>
+     <span class="feature-badge"><i class="fas fa-palette"></i>Телеграмм проверен </span>
+                    </div>
+                    <button class="btn-primary px-4 py-2 text-sm">
+                        <i class="fas fa-calendar-alt mr-1">-</i> 
+                    </button>
+                </div>
+            </div>
+ <!-- Article 1 -->
+            <div class="clothing-card">
+                <div class="price-tag">Admin Asasin</div>
+                <img src="https://images.unsplash.com/photo-1539109136881-3be0616acf4b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=687&q=80" alt="Robe Chanel" class="clothing-image">
+                <div class="flex items-start mb-3">
+                    <div class="relative mr-3">
+                        <div class="clothing-icon bg-purple-100 text-purple-600">
+                            <i class="fas fa-tshirt">1</i>
+                        </div>
+                        <div class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center text-white text-xs">
+                            <i class="fas fa-check"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="font-bold">Asasinka</h3>
+                        <div class="flex items-center mb-1">
+                    
+                            <span class="security-badge mr-2">
+                                <i class="fas fa-award mr-1"></i>
+                            </span>
+                            <span class="text-sm text-green-600">
+                                <i class="fas fa-check-circle mr-1"></i> verified
+                            </span>
+                        </div>
+                        <div class="mt-2">
+                            <span class="chanel-badge brand-badge">Good</span>
+                            <span class="occasion-badge bg-pink-100 text-pink-800">Good 2</span>
+ <span class="occasion-badge bg-pink-100 text-pink-800">Veteran 1 seazon</span>
+ <span class="occasion-badge bg-pink-100 text-pink-800">Veteran 2 seazon</span>
+ <span class="occasion-badge bg-pink-100 text-pink-800">Veteran 3 seazon</span>
+ <span class="occasion-badge bg-pink-100 text-pink-800">Veteran 4 seazon</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex justify-between items-center">
+                    <div>
+                        <span class="feature-badge"><i class="fas fa-ruler"></i> Record 4,500,000</span>
+                        <span class="feature-badge"><i class="fas fa-palette"></i>Не уязвимый</span>
+     <span class="feature-badge"><i class="fas fa-palette"></i>Телеграмм проверен </span>
+                    </div>
+                    <button class="btn-primary px-4 py-2 text-sm">
+                        <i class="fas fa-calendar-alt mr-1">-</i> 
+                    </button>
+                </div>
+            </div>
+ <!-- Article 1 -->
+            <div class="clothing-card">
+                <div class="price-tag">989098</div>
+                <img src="https://images.unsplash.com/photo-1539109136881-3be0616acf4b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=687&q=80" alt="Robe Chanel" class="clothing-image">
+                <div class="flex items-start mb-3">
+                    <div class="relative mr-3">
+                        <div class="clothing-icon bg-purple-100 text-purple-600">
+                            <i class="fas fa-tshirt">1</i>
+                        </div>
+                        <div class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center text-white text-xs">
+                            <i class="fas fa-check"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="font-bold">ban.Admin</h3>
+                        <div class="flex items-center mb-1">
+                    
+                            <span class="security-badge mr-2">
+                                <i class="fas fa-award mr-1"></i>
+                            </span>
+                            <span class="text-sm text-green-600">
+                                <i class="fas fa-check-circle mr-1"></i> verified
+                            </span>
+                        </div>
+                        <div class="mt-2">
+                            <span class="chanel-badge brand-badge">Good</span>
+                            <span class="occasion-badge bg-pink-100 text-pink-800">Good 2</span>
+ <span class="occasion-badge bg-pink-100 text-pink-800">Veteran 1 seazon</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex justify-between items-center">
+                    <div>
+                        <span class="feature-badge"><i class="fas fa-ruler"></i> Record baned</span>
+                        <span class="feature-badge"><i class="fas fa-palette"></i>baned</span>
+     <span class="feature-badge"><i class="fas fa-palette"></i>Телеграмм проверен </span>
+                    </div>
+                    <button class="btn-primary px-4 py-2 text-sm">
+                        <i class="fas fa-calendar-alt mr-1">-</i> 
+                    </button>
+                </div>
+            </div>
+ <!-- Article 1 -->
+            <div class="clothing-card">
+                <div class="price-tag">2333333</div>
+                <img src="https://images.unsplash.com/photo-1539109136881-3be0616acf4b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=687&q=80" alt="Robe Chanel" class="clothing-image">
+                <div class="flex items-start mb-3">
+                    <div class="relative mr-3">
+                        <div class="clothing-icon bg-purple-100 text-purple-600">
+                            <i class="fas fa-tshirt">1</i>
+                        </div>
+                        <div class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center text-white text-xs">
+                            <i class="fas fa-check"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="font-bold">cheat 222</h3>
+                        <div class="flex items-center mb-1">
+                    
+                            <span class="security-badge mr-2">
+                                <i class="fas fa-award mr-1"></i>
+                            </span>
+                                                    </div>
+                        <div class="mt-2">
+                            <span class="chanel-badge brand-badge">ban-213</span>
+                            <span class="occasion-badge bg-pink-100 text-pink-800"></span>
+ <span class="occasion-badge bg-pink-100 text-pink-800"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex justify-between items-center">
+                    <div>
+                        <span class="feature-badge"><i class="fas fa-ruler"></i> </span>
+                        <span class="feature-badge"><i class="fas fa-palette"></i></span>
+     <span class="feature-badge"><i class="fas fa-palette"></i> </span>
+                    </div>
+                    <button class="btn-primary px-4 py-2 text-sm">
+                        <i class="fas fa-calendar-alt mr-1">-</i> 
+                    </button>
+                </div>
+            </div>
+ <!-- Article 1 -->
+            <div class="clothing-card">
+                <div class="price-tag">14141414</div>
+                <img src="https://images.unsplash.com/photo-1539109136881-3be0616acf4b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=687&q=80" alt="Robe Chanel" class="clothing-image">
+                <div class="flex items-start mb-3">
+                    <div class="relative mr-3">
+                        <div class="clothing-icon bg-purple-100 text-purple-600">
+                            <i class="fas fa-tshirt">1</i>
+                        </div>
+                        <div class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center text-white text-xs">
+                            <i class="fas fa-check"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="font-bold">vladmix</h3>
+                        <div class="flex items-center mb-1">
+                    
+                            <span class="security-badge mr-2">
+                                <i class="fas fa-award mr-1"></i>
+                            </span>
+                            <span class="text-sm text-green-600">
+                                <i class="fas fa-check-circle mr-1"></i> verified
+                            </span>
+                        </div>
+                        <div class="mt-2">
+                            <span class="chanel-badge brand-badge">Good</span>
+                            <span class="occasion-badge bg-pink-100 text-pink-800">Good 2</span>
+ <span class="occasion-badge bg-pink-100 text-pink-800"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex justify-between items-center">
+                    <div>
+                        <span class="feature-badge"><i class="fas fa-ruler"></i> Record 89999</span>
+                        <span class="feature-badge"><i class="fas fa-palette"></i>Администратор</span>
+     <span class="feature-badge"><i class="fas fa-palette"></i>Телеграмм проверен </span>
+                    </div>
+                    <button class="btn-primary px-4 py-2 text-sm">
+                        <i class="fas fa-calendar-alt mr-1">-</i> 
+                    </button>
+                </div>
+            </div>
+ <!-- Article 1 -->
+            <div class="clothing-card">
+                <div class="price-tag">435537</div>
+                <img src="https://images.unsplash.com/photo-1539109136881-3be0616acf4b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=687&q=80" alt="Robe Chanel" class="clothing-image">
+                <div class="flex items-start mb-3">
+                    <div class="relative mr-3">
+                        <div class="clothing-icon bg-purple-100 text-purple-600">
+                            <i class="fas fa-tshirt">1</i>
+                        </div>
+                        <div class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center text-white text-xs">
+                            <i class="fas fa-check"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="font-bold">ArsenB32</h3>
+                        <div class="flex items-center mb-1">
+                    
+                            <span class="security-badge mr-2">
+                                <i class="fas fa-award mr-1"></i>
+                            </span>
+                                                    </div>
+                        <div class="mt-2">
+                            <span class="chanel-badge brand-badge">Good</span>
+                            <span class="occasion-badge bg-pink-100 text-pink-800"></span>
+ <span class="occasion-badge bg-pink-100 text-pink-800"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex justify-between items-center">
+                    <div>
+                        <span class="feature-badge"><i class="fas fa-ruler"></i> </span>
+                        <span class="feature-badge"><i class="fas fa-palette"></i></span>
+     <span class="feature-badge"><i class="fas fa-palette"></i> </span>
+                    </div>
+                    <button class="btn-primary px-4 py-2 text-sm">
+                        <i class="fas fa-calendar-alt mr-1">-</i> 
+                    </button>
+                </div>
+            </div>
+
+            </body>
+
+
+  </html>
+
+
+
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Кейс Симулятор</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            text-align: center;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            background-color: #007bff;
+            border: none;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        input {
+            padding: 10px;
+            width: 80%;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .message {
+            margin: 20px 0;
+            font-weight: bold;
+            color: #28a745;
+        }
+        .error {
+            color: #dc3545;
+        }
+        .inventory {
+            margin-top: 20px;
+            text-align: left;
+        }
+        .skin {
+            display: flex;
+            justify-content: space-between;
+        }
+        .donate-shop {
+            margin-top: 20px;
+            text-align: left;
+        }
+        .donate-skins {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Кейс Симулятор</h1>
+        <div id="balance">Баланс: 1000 монет</div>
+        <div id="level">Уровень: 1</div>
+        <div id="hp">HP: 0</div>
+        <button onclick="openCase()">Открыть кейс за 50 монет</button>
+        <button onclick="openShop()">Магазин</button>
+        <button onclick="openSettings()">Настройки</button>
+        <div id="message" class="message"></div>
+        <div class="inventory" id="inventory"></div>
+
+        <div class="donate-shop">
+            <h2>Донат-магазин</h2>
+            <div class="donate-skins">
+                <div>Скин: Frach - 500,000 монет</div>
+                <div>Скин: Суперское оружие - 500,000 монет</div>
+                <div>Скин: Элитный скин - 500,000 монет</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let balance = 1000;
+        let hp = 0;
+        let skins = [];
+        let level = 1;
+
+        function loadProgress() {
+            const savedData = JSON.parse(localStorage.getItem('caseSimulatorProgress'));
+            if (savedData) {
+                balance = savedData.balance || 1000;
+                hp = savedData.hp || 0;
+                skins = savedData.skins || [];
+                level = Math.floor(hp / 10) + 1;
+            }
+            updateBalances();
+        }
+
+        function saveProgress() {
+            const progress = {
+                balance: balance,
+                hp: hp,
+                skins: skins
+            };
+            localStorage.setItem('caseSimulatorProgress', JSON.stringify(progress));
+        }
+
+        function openCase() {
+            if (balance < 50) {
+                showMessage("Недостаточно монет для открытия кейса.", true);
+                return;
+            }
+            balance -= 50;
+            const skinsArr = ["Обычный", "Необычный", "Редкий", "Эпический", "Легендарный"];
+            const drops = [0.5, 0.3, 0.15, 0.04, 0.01];
+            const index = weightedRandom(drops);
+            const skin = skinsArr[index];
+            skins.push(skin);
+            hp += 1;
+            if (hp % 10 === 0) level++;
+            showMessage(`Вы получили скин: ${skin}`);
+            updateBalances();
+            saveProgress();
+        }
+
+        function openShop() {
+
+            const shopWindow = window.open("", "Магазин", "width=400,height=400");
+            shopWindow.document.write("<h2>Магазин</h2>");
+            const shopItems = {
+                "Обычный": 10,
+                "Необычный": 50,
+                "Редкий": 100,
+                "Эпический": 250,
+                "Легендарный": 500
+            };
+            for (const skin in shopItems) {
+                shopWindow.document.write(`<button onclick="buySkin('${skin}', ${shopItems[skin]}, window.opener)">Купить ${skin} за ${shopItems[skin]} монет</button><br>`);
+            }
+        }
+
+        function buySkin(skin, price, opener) {
+            if (balance < price) {
+                alert("Недостаточно монет для покупки скина.");
+                return;
+            }
+            balance -= price;
+            skins.push(skin);
+            alert(`Вы приобрели скин: ${skin}`);
+            opener.updateBalances();
+            opener.saveProgress();
+        }
+
+        function openSettings() {
+            const promoCode = prompt("Введите промокод:");
+            applyPromo(promoCode);
+        }
+
+        function applyPromo(code) {
+            if (code === "500") {
+                balance += 5000;
+                showMessage("Промокод принят! +5000 монет.");
+            } else if (code === "900") {
+                hp += 1000000;
+                showMessage("Промокод принят! +1000000 HP.");
+            } else {
+                showMessage("Неверный промокод.", true);
+            }
+            level = Math.floor(hp / 10) + 1;
+            updateBalances();
+        }
+
+        function updateBalances() {
+            document.getElementById("balance").innerText = `Баланс: ${balance} монет`;
+            document.getElementById("hp").innerText = `HP: ${hp}`;
+            document.getElementById("level").innerText = `Уровень: ${level}`;
+            updateInventory();
+        }
+
+        function updateInventory() {
+            const inventoryDiv = document.getElementById("inventory");
+            inventoryDiv.innerHTML = "<h2>Инвентарь</h2>";
+            skins.forEach((skin, index) => {
+                inventoryDiv.innerHTML += `<div class="skin">${skin}<button onclick="sellSkin(${index})">Продать</button></div>`;
+            });
+        }
+
+        function sellSkin(index) {
+            const price = 20; // цену продажи можно задать
+            skins.splice(index, 1);
+            balance += price;
+            showMessage(`Скин продан за ${price} монет.`);
+            updateBalances();
+            saveProgress();
+        }
+
+        function showMessage(text, isError = false) {
+            const messageDiv = document.getElementById("message");
+            messageDiv.innerText = text;
+            messageDiv.className = isError ? "message error" : "message";
+        }
+
+        function weightedRandom(weights) {
+            let sum = 0;
+            for (const weight of weights) {
+                sum += weight;
+            }
+
+            let random = Math.random() * sum;
+            for (let i = 0; i < weights.length; i++) {
+                if (random < weights[i]) {
+                    return i;
+                }
+                random -= weights[i];
+            }
+            return weights.length - 1; // Should not reach here
+        }
+
+        window.onload = loadProgress;
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+     
